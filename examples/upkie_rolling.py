@@ -88,8 +88,8 @@ if __name__ == "__main__":
 
     # Select QP solver
     solver = qpsolvers.available_solvers[0]
-    if "proxqp" in qpsolvers.available_solvers:
-        solver = "proxqp"
+    if "osqp" in qpsolvers.available_solvers:
+        solver = "osqp"
 
     rate = RateLimiter(frequency=200.0, warn=False)
     dt = rate.period

@@ -14,7 +14,7 @@ import meshcat_shapes
 import pink
 from pink import solve_ik
 from pink.limits import AccelerationLimit
-from pink.tasks import DampingTask, FrameTask, PostureTask
+from pink.tasks import DampingTask, FrameTask, PostureTask, LowAccelerationTask
 from pink.utils import custom_configuration_vector
 from pink.visualization import start_meshcat_visualizer
 
@@ -57,6 +57,9 @@ if __name__ == "__main__":
     damping_task = DampingTask(
         cost=1e-1,  # [cost] * [s] / [rad]
     )
+    acceleration_task = LowAccelerationTask(
+        cost=1e-1,
+    )
     acceleration_limit = AccelerationLimit(
         robot.model,
         np.full(
@@ -90,8 +93,9 @@ if __name__ == "__main__":
     for step in range(NB_STEPS):
         # Update task targets
         end_effector_target = end_effector_task.transform_target_to_world
-        end_effector_target.translation[1] = 0.5 + 0.1 * np.sin(2.0 * t)
-        end_effector_target.translation[2] = 0.2
+        end_effector_target.translation[0] = 0.1 * np.sin(2.0 * t)
+        end_effector_target.translation[1] = 0.4 + 0.1 * np.sin(2.0 * t)
+        end_effector_target.translation[2] = 0.1 + 0.1 * np.sin(2.0 * t)
 
         # Update visualization frames
         viewer["end_effector_target"].set_transform(end_effector_target.np)
@@ -115,11 +119,15 @@ if __name__ == "__main__":
             # 2. Switching from a posture to a damping task
             # 3. Adding an acceleration limit
             end_effector_task.gain = 0.4
-            tasks = (end_effector_task, damping_task)
+            tasks = (
+                end_effector_task, 
+                damping_task,
+                acceleration_task,
+            )
             limits = (
                 configuration.model.configuration_limit,
                 configuration.model.velocity_limit,
-                acceleration_limit,
+                # acceleration_limit,
             )
 
         # Compute velocity and integrate it into next configuration
@@ -129,6 +137,7 @@ if __name__ == "__main__":
         Delta_q = velocity * dt
         configuration.integrate_inplace(velocity, dt)
         acceleration_limit.set_last_integration(velocity, dt)
+        acceleration_task.set_last_integration(velocity, dt)
 
         # Append plotting data to lists
         configurations.append(configuration.q)

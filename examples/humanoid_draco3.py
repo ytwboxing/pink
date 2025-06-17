@@ -122,15 +122,15 @@ if __name__ == "__main__":
         right_foot_task,
         right_wrist_task,
         posture_task,
-        l_knee_holonomic_task,
-        r_knee_holonomic_task,
+        # l_knee_holonomic_task,
+        # r_knee_holonomic_task,
     ]
 
     # Task target specifications
     pelvis_pose = configuration.get_transform_frame_to_world(
         "torso_com_link"
     ).copy()
-    pelvis_pose.translation[0] += 0.05
+    pelvis_pose.translation[2] -= 0.15
     pelvis_task.set_target(pelvis_pose)
 
     transform_l_ankle_target_to_init = pin.SE3(

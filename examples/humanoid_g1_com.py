@@ -45,9 +45,9 @@ if __name__ == "__main__":
     q_ref[6] = 1.0
 
     configuration = pink.Configuration(robot.model, robot.data, q_ref)
-    pelvis_orientation_task = FrameTask(
+    pelvis_task = FrameTask(
         "pelvis",
-        position_cost=0.0,  # [cost] / [m]
+        position_cost=10.0,  # [cost] / [m]
         orientation_cost=10.0,  # [cost] / [rad]
     )
 
@@ -58,7 +58,11 @@ if __name__ == "__main__":
         cost=1e-1,  # [cost] / [rad]
     )
 
-    tasks = [pelvis_orientation_task, posture_task, com_task]
+    tasks = [
+        pelvis_task, 
+        posture_task, 
+        # com_task
+    ]
 
     for foot in ["right_ankle_roll_link", "left_ankle_roll_link"]:
         task = FrameTask(
@@ -83,6 +87,11 @@ if __name__ == "__main__":
             if task.frame in ["right_palm_link", "left_palm_link"]:
                 target.translation += np.array([-0.1, 0.0, -0.2])
                 task.set_target(target)
+
+    pelvis_target = pelvis_task.transform_target_to_world
+    pelvis_target.translation[2] = q_ref[2] - 0.2
+    pelvis_target.translation[0] = 0.2
+    pelvis_target.rotation = pin.utils.rpyToMatrix(0.3, -0.3, 0.0)
 
     # Select QP solver
     solver = qpsolvers.available_solvers[0]
